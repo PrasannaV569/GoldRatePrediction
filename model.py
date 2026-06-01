@@ -4,6 +4,8 @@ import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import math
 
 # Load dataset
 df = pd.read_csv("GoldRate - History_Data.csv")
@@ -66,8 +68,48 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle
 model = RandomForestRegressor(random_state=42, n_estimators=200)
 model.fit(X_train, y_train)
 
+# --- Model Evaluation ---
+y_pred_train = model.predict(X_train)
+y_pred_test = model.predict(X_test)
+
+# Calculate metrics for training set
+train_r2 = r2_score(y_train, y_pred_train)
+train_rmse = math.sqrt(mean_squared_error(y_train, y_pred_train))
+train_mae = mean_absolute_error(y_train, y_pred_train)
+
+# Calculate metrics for test set
+test_r2 = r2_score(y_test, y_pred_test)
+test_rmse = math.sqrt(mean_squared_error(y_test, y_pred_test))
+test_mae = mean_absolute_error(y_test, y_pred_test)
+
+# Print evaluation metrics
+print("=" * 50)
+print("MODEL EVALUATION METRICS")
+print("=" * 50)
+print("\nTRAINING SET:")
+print(f"  R² Score: {train_r2:.4f}")
+print(f"  RMSE: {train_rmse:.4f}")
+print(f"  MAE: {train_mae:.4f}")
+
+print("\nTEST SET:")
+print(f"  R² Score: {test_r2:.4f}")
+print(f"  RMSE: {test_rmse:.4f}")
+print(f"  MAE: {test_mae:.4f}")
+print("=" * 50)
+
 # Save the trained model
 joblib.dump(model, "gold_model.pkl")
+
+# Save metrics to a file for reference
+metrics = {
+    "train_r2": train_r2,
+    "train_rmse": train_rmse,
+    "train_mae": train_mae,
+    "test_r2": test_r2,
+    "test_rmse": test_rmse,
+    "test_mae": test_mae,
+}
+joblib.dump(metrics, "model_metrics.pkl")
 
 # --- Prediction function ---
 def predict_gold_price(history):
@@ -114,4 +156,3 @@ def predict_gold_price(history):
     predicted_price = last_price * (1 + prediction / 100)
 
     return predicted_price
-
